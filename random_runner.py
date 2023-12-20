@@ -219,7 +219,7 @@ def run_program(iter, action_dict):
     if not os.path.exists("output_logs"):
         # Create the directory
         os.makedirs("output_logs")
-    process = subprocess.Popen(["./bin/champsim", "-w", "0", "--simulation-instructions", "250000000", trace, "--json", f"output_json/{name}.json"],
+    process = subprocess.Popen(["./bin/champsim", "-w", "125000000", "--simulation-instructions", "250000000", trace, "--json", f"output_json/{name}.json"],
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     out, err = process.communicate()
     print("Done running program")
