@@ -442,5 +442,5 @@ for i in range(1):
     print(i)
     main(i)
 
-with open("champsim_data.pickle", "wb+") as handle:
-    pickle.dump(data_store, handle, protocol=pickle.HIGHEST_PROTOCOL)
+# with open("champsim_data.pickle", "wb+") as handle:
+#     pickle.dump(data_store, handle, protocol=pickle.HIGHEST_PROTOCOL)
