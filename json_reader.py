@@ -53,7 +53,7 @@ def parse_output(data, champsim_terminal_output):
     ######## TS #######
     total_res = []
     prev_res = {}
-    champsim_info = champsim_config_reader("/Users/aaronchan/Documents/ChampSim/champsim_config.json")
+    champsim_info = champsim_config_reader("champsim_config.json")
     mpki = []
     def get_text_between(text, start, end):
         if end == "":
