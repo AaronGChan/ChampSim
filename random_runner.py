@@ -438,7 +438,7 @@ def main(iter):
     run_program(iter, action_dict)
 
 
-for i in range(1):
+for i in range(10):
     print(i)
     main(i)
 
