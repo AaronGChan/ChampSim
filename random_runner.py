@@ -445,7 +445,8 @@ for i in range(50):
     except KeyboardInterrupt:
         # quit
         sys.exit()
-    except:
+    except Exception as ex:
+        print("ERROR:", ex)
         continue
 
 # with open("champsim_data.pickle", "wb+") as handle:
