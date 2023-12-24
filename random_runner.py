@@ -440,7 +440,13 @@ def main(iter):
 
 for i in range(50):
     print(i)
-    main(i)
+    try:
+        main(i)
+    except KeyboardInterrupt:
+        # quit
+        sys.exit()
+    except:
+        continue
 
 # with open("champsim_data.pickle", "wb+") as handle:
 #     pickle.dump(data_store, handle, protocol=pickle.HIGHEST_PROTOCOL)
