@@ -365,6 +365,7 @@ def run_program(iter, action_dict):
         outstream = out.decode()
     else:
         print(err.decode())
+        print(action_dict)
         sys.exit()
     print("Done configuring/making config")
 
@@ -395,7 +396,8 @@ def run_program(iter, action_dict):
         outstream = out.decode()
     else:
         print(err.decode())
-        sys.exit()
+        print(print(action_dict))
+        #sys.exit()
     if len(outstream) < 100:
         print(outstream)
     txt_file_path = f"output_logs/{name}.txt"
