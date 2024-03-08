@@ -5,7 +5,8 @@ import subprocess
 import sys
 import pickle
 from datetime import datetime
-#from json_reader import parse_output
+
+# from json_reader import parse_output
 import os
 from google.cloud import firestore, storage
 import time
@@ -174,23 +175,29 @@ def decode(act_encoded):
     return act_decoded
 
 
-def select_config():
+def select_config(trace):
     act_encoded = {}
     db = firestore.Client(project="nth-droplet-407821")
 
-    # doc_ref = db.collection("champsim").document("data")
+    doc_ref = db.collection("champsim").document(trace)
+    doc = doc_ref.get()
+    if not doc.exists:
+        doc_ref.set({"dummy": "1"})
     # doc_ref.set({"8_1_2": "1"})
     found_good_value = False
     while not found_good_value:
 
         def pull_doc():
-            docs = db.collection("champsim").stream()
-            for doc in docs:
-                data_store = doc.to_dict()
+            data_store = db.collection("champsim").document(trace).get().to_dict()
             return data_store
 
         data_store = pull_doc()
-        while not act_encoded or repr(list(act_encoded.values())) in data_store.keys():
+        # repr(list(act_encoded.values())
+        while (
+            not act_encoded
+            or ("_".join([str(i) for i in list(act_encoded.values())]) + ".txt")
+            in data_store
+        ):
             act_encoded["Frequency"] = random.randint(
                 0, len(frequency_mapper.keys()) - 1
             )
@@ -270,12 +277,14 @@ def select_config():
                 0, len(l1d_prefetcher_mapper.keys()) - 1
             )
         data_store_1 = pull_doc()
+        # breakpoint()
         if repr(list(act_encoded.values())) not in data_store_1.keys():
-            doc_ref = db.collection("champsim").document("data")
+            doc_ref = db.collection("champsim").document(trace)
             data_store_1[repr(list(act_encoded.values()))] = "1"
             doc_ref.set(data_store_1)
             found_good_value = True
             break
+        break
 
     act_decoded = decode(act_encoded)
     write_to_json(act_decoded)
@@ -327,7 +336,7 @@ def write_to_json(action):
             json.dump(data, JsonFile, indent=4)
 
 
-def run_program(iter, action_dict):
+def run_program(iter, action_dict, trace):
     def current_datetime_to_numeric_representation():
         # Use a reference datetime (e.g., epoch)
         reference_datetime = datetime(2022, 1, 1)
@@ -345,7 +354,7 @@ def run_program(iter, action_dict):
     name = list(action_dict.values())
     name = [str(n) for n in name]
     name = "_".join(name)
-    trace = "traces/400.perlbench-41B.champsimtrace.xz"
+    trace = f"traces/{trace}"
     process = subprocess.Popen(
         ["./config.sh", "champsim_config.json"],
         stdout=subprocess.PIPE,
@@ -368,24 +377,25 @@ def run_program(iter, action_dict):
         print(action_dict)
         sys.exit()
     print("Done configuring/making config")
-
-    if not os.path.exists("output_json"):
+    output_json_dir = f"output_json_{trace}"
+    output_logs_dir = f"output_logs_{trace}"
+    if not os.path.exists(output_json_dir):
         # Create the directory
-        os.makedirs("output_json")
-    if not os.path.exists("output_logs"):
+        os.makedirs(output_json_dir)
+    if not os.path.exists(output_logs_dir):
         # Create the directory
-        os.makedirs("output_logs")
+        os.makedirs(output_logs_dir)
     start_time = time.time()
     process = subprocess.Popen(
         [
             "./bin/champsim",
             "-w",
-            "125000000",
-            "--simulation-instructions",
             "250000000",
+            "--simulation-instructions",
+            "500000000",
             trace,
             "--json",
-            f"output_json/{name}.json",
+            f"{output_json_dir}/{name}.json",
         ],
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -397,14 +407,14 @@ def run_program(iter, action_dict):
     else:
         print(err.decode())
         print(print(action_dict))
-        #sys.exit()
+        # sys.exit()
     if len(outstream) < 100:
         print(outstream)
-    txt_file_path = f"output_logs/{name}.txt"
-    json_file_path = f"output_json/{name}.json"
-    with open(f"output_logs/{name}.txt", "w+") as file:
+    txt_file_path = f"{output_logs_dir}/{name}.txt"
+    json_file_path = f"{output_json_dir}/{name}.json"
+    with open(f"{output_logs_dir}/{name}.txt", "w+") as file:
         file.write(outstream)
-    with open(f"output_json/{name}.json", "r") as json_file:
+    with open(f"{output_json_dir}/{name}.json", "r") as json_file:
         json_data = json.load(json_file)
 
     client = storage.Client(
@@ -423,8 +433,7 @@ def run_program(iter, action_dict):
 
     txt_blob = bucket.blob(txt_file_path)
     txt_blob.upload_from_filename(txt_file_path)
-    # breakpoint()
-    #data_store[name] = parse_output(json_data, outstream)
+    # data_store[name] = parse_output(json_data, outstream)
     print("Done storing everything")
 
 
@@ -434,22 +443,143 @@ def run_program(iter, action_dict):
 # except:
 #     data_store = {}
 
+"""
+import subprocess
+import os
 
-def main(iter):
-    action_dict = select_config()
-    run_program(iter, action_dict)
+def download_with_subprocess(url, destination_file=None):
+    if destination_file is None:
+        destination_file = os.path.basename(url)  # Use the filename from the URL
+
+    wget_command = ['wget', url, '-O', destination_file]
+    subprocess.run(wget_command) 
+
+# Example
+url = "https://www.example.com/images/sample_image.jpg"
+download_with_subprocess(url) 
+
+"""
+def download_with_subprocess(url, destination_file=None):
+    if destination_file is None:
+        destination_file = os.path.basename(url)  # Use the filename from the URL
+
+    wget_command = ['wget', url, '-O', destination_file]
+    subprocess.run(wget_command) 
+
+def main(iter, trace):
+    action_dict = select_config(trace)
+    run_program(iter, action_dict, trace)
 
 
-for i in range(50):
-    print(i)
-    try:
-        main(i)
-    except KeyboardInterrupt:
-        # quit
-        sys.exit()
-    except Exception as ex:
-        print("ERROR:", ex)
-        continue
+traces = [
+    "400.perlbench-41B.champsimtrace.xz",
+    "400.perlbench-50B.champsimtrace.xz",
+    "401.bzip2-226B.champsimtrace.xz",
+    "401.bzip2-277B.champsimtrace.xz",
+    "401.bzip2-38B.champsimtrace.xz",
+    "401.bzip2-7B.champsimtrace.xz",
+    "403.gcc-16B.champsimtrace.xz",
+    "403.gcc-17B.champsimtrace.xz",
+    "403.gcc-48B.champsimtrace.xz",
+    "410.bwaves-1963B.champsimtrace.xz",
+    "410.bwaves-2097B.champsimtrace.xz",
+    "410.bwaves-945B.champsimtrace.xz",
+    "416.gamess-875B.champsimtrace.xz",
+    "429.mcf-184B.champsimtrace.xz",
+    "429.mcf-192B.champsimtrace.xz",
+    "429.mcf-217B.champsimtrace.xz",
+    "429.mcf-22B.champsimtrace.xz",
+    "429.mcf-51B.champsimtrace.xz",
+    "433.milc-127B.champsimtrace.xz",
+    "433.milc-274B.champsimtrace.xz",
+    "433.milc-337B.champsimtrace.xz",
+    "434.zeusmp-10B.champsimtrace.xz",
+    "435.gromacs-111B.champsimtrace.xz",
+    "435.gromacs-134B.champsimtrace.xz",
+    "435.gromacs-226B.champsimtrace.xz",
+    "435.gromacs-228B.champsimtrace.xz",
+    "436.cactusADM-1804B.champsimtrace.xz",
+    "437.leslie3d-134B.champsimtrace.xz",
+    "437.leslie3d-149B.champsimtrace.xz",
+    "437.leslie3d-232B.champsimtrace.xz",
+    "437.leslie3d-265B.champsimtrace.xz",
+    "437.leslie3d-271B.champsimtrace.xz",
+    "437.leslie3d-273B.champsimtrace.xz",
+    "444.namd-120B.champsimtrace.xz",
+    "444.namd-166B.champsimtrace.xz",
+    "444.namd-23B.champsimtrace.xz",
+    "444.namd-321B.champsimtrace.xz",
+    "444.namd-33B.champsimtrace.xz",
+    "444.namd-426B.champsimtrace.xz",
+    "444.namd-44B.champsimtrace.xz",
+    "445.gobmk-17B.champsimtrace.xz",
+    "445.gobmk-2B.champsimtrace.xz",
+    "445.gobmk-30B.champsimtrace.xz",
+    "445.gobmk-36B.champsimtrace.xz",
+    "447.dealII-3B.champsimtrace.xz",
+    "450.soplex-247B.champsimtrace.xz",
+    "450.soplex-92B.champsimtrace.xz",
+    "453.povray-252B.champsimtrace.xz",
+    "453.povray-576B.champsimtrace.xz",
+    "453.povray-800B.champsimtrace.xz",
+    "453.povray-887B.champsimtrace.xz",
+    "454.calculix-104B.champsimtrace.xz",
+    "454.calculix-460B.champsimtrace.xz",
+    "456.hmmer-191B.champsimtrace.xz",
+    "456.hmmer-327B.champsimtrace.xz",
+    "456.hmmer-88B.champsimtrace.xz",
+    "458.sjeng-1088B.champsimtrace.xz",
+    "458.sjeng-283B.champsimtrace.xz",
+    "458.sjeng-31B.champsimtrace.xz",
+    "458.sjeng-767B.champsimtrace.xz",
+    "459.GemsFDTD-1169B.champsimtrace.xz",
+    "459.GemsFDTD-1211B.champsimtrace.xz",
+    "459.GemsFDTD-1320B.champsimtrace.xz",
+    "459.GemsFDTD-1418B.champsimtrace.xz",
+    "459.GemsFDTD-1491B.champsimtrace.xz",
+    "459.GemsFDTD-765B.champsimtrace.xz",
+    "462.libquantum-1343B.champsimtrace.xz",
+    "462.libquantum-714B.champsimtrace.xz",
+    "464.h264ref-30B.champsimtrace.xz",
+    "464.h264ref-57B.champsimtrace.xz",
+    "464.h264ref-64B.champsimtrace.xz",
+    "464.h264ref-97B.champsimtrace.xz",
+    "465.tonto-1914B.champsimtrace.xz",
+    "465.tonto-44B.champsimtrace.xz",
+    "470.lbm-1274B.champsimtrace.xz",
+    "471.omnetpp-188B.champsimtrace.xz",
+    "473.astar-153B.champsimtrace.xz",
+    "473.astar-359B.champsimtrace.xz",
+    "473.astar-42B.champsimtrace.xz",
+    "481.wrf-1170B.champsimtrace.xz",
+    "481.wrf-1254B.champsimtrace.xz",
+    "481.wrf-1281B.champsimtrace.xz",
+    "481.wrf-196B.champsimtrace.xz",
+    "481.wrf-455B.champsimtrace.xz",
+    "481.wrf-816B.champsimtrace.xz",
+    "482.sphinx3-1100B.champsimtrace.xz",
+    "482.sphinx3-1297B.champsimtrace.xz",
+    "482.sphinx3-1395B.champsimtrace.xz",
+    "482.sphinx3-1522B.champsimtrace.xz",
+    "482.sphinx3-234B.champsimtrace.xz",
+    "482.sphinx3-417B.champsimtrace.xz",
+    "483.xalancbmk-127B.champsimtrace.xz",
+    "483.xalancbmk-716B.champsimtrace.xz",
+    "483.xalancbmk-736B.champsimtrace.xz",
+]
+for trace in traces:
+    url = f"https://dpc3.compas.cs.stonybrook.edu/champsim-traces/speccpu/{trace}"
+    download_with_subprocess(url, f"traces/{trace}")
+    for i in range(1):
+        main(i, trace)
+        try:
+            main(i, trace)
+        except KeyboardInterrupt:
+            # quit
+            sys.exit()
+        except Exception as ex:
+            print("ERROR:", ex)
+            continue
 
 # with open("champsim_data.pickle", "wb+") as handle:
 #     pickle.dump(data_store, handle, protocol=pickle.HIGHEST_PROTOCOL)

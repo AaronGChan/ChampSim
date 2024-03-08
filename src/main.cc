@@ -88,7 +88,7 @@ int main(int argc, char** argv)
 
   std::vector<champsim::phase_info> phases{
       {champsim::phase_info{"Warmup", true, warmup_instructions, std::vector<std::size_t>(std::size(trace_names), 0), trace_names}}};
-  uint64_t len = 100;
+  uint64_t len = 200;
   uint64_t subset_instr = simulation_instructions/len;
   for(uint64_t i = 0; i < len; ++i){
     phases.push_back(champsim::phase_info{"Simulation" + std::to_string(i), false, subset_instr, std::vector<std::size_t>(std::size(trace_names), 0), trace_names});
