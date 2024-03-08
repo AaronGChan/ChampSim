@@ -571,7 +571,7 @@ for trace in traces:
     url = f"https://dpc3.compas.cs.stonybrook.edu/champsim-traces/speccpu/{trace}"
     trace_fp = f"traces/{trace}"
     download_with_subprocess(url, trace_fp)
-    for i in range(1):
+    for i in range(30):
         print(i)
         main(i, trace)
         try:
