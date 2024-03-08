@@ -354,7 +354,7 @@ def run_program(iter, action_dict, trace):
     name = list(action_dict.values())
     name = [str(n) for n in name]
     name = "_".join(name)
-    trace = f"traces/{trace}"
+    trace_fp = f"traces/{trace}"
     process = subprocess.Popen(
         ["./config.sh", "champsim_config.json"],
         stdout=subprocess.PIPE,
@@ -393,7 +393,7 @@ def run_program(iter, action_dict, trace):
             "250000000",
             "--simulation-instructions",
             "500000000",
-            trace,
+            trace_fp,
             "--json",
             f"{output_json_dir}/{name}.json",
         ],
@@ -569,8 +569,10 @@ traces = [
 ]
 for trace in traces:
     url = f"https://dpc3.compas.cs.stonybrook.edu/champsim-traces/speccpu/{trace}"
-    download_with_subprocess(url, f"traces/{trace}")
+    trace_fp = f"traces/{trace}"
+    download_with_subprocess(url, trace_fp)
     for i in range(1):
+        print(i)
         main(i, trace)
         try:
             main(i, trace)
@@ -580,6 +582,7 @@ for trace in traces:
         except Exception as ex:
             print("ERROR:", ex)
             continue
+    os.remove(trace_fp) # clean up the folder so we don't have all the traces
 
 # with open("champsim_data.pickle", "wb+") as handle:
 #     pickle.dump(data_store, handle, protocol=pickle.HIGHEST_PROTOCOL)
