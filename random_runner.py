@@ -469,7 +469,7 @@ def download_with_subprocess(url, destination_file=None):
 def main(iter, trace):
     action_dict = select_config(trace)
     run_program(iter, action_dict, trace)
-
+import random
 
 traces = [
     "400.perlbench-41B.champsimtrace.xz",
@@ -567,6 +567,8 @@ traces = [
     "483.xalancbmk-716B.champsimtrace.xz",
     #"483.xalancbmk-736B.champsimtrace.xz",
 ]
+random.shuffle(traces)
+
 for trace in traces:
     url = f"https://dpc3.compas.cs.stonybrook.edu/champsim-traces/speccpu/{trace}"
     trace_fp = f"traces/{trace}"
