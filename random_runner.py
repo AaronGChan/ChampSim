@@ -390,7 +390,7 @@ def run_program(iter, action_dict, trace):
         [
             "./bin/champsim",
             "-w",
-            "250000000",
+            "200000000",
             "--simulation-instructions",
             "500000000",
             trace_fp,
@@ -571,7 +571,7 @@ for trace in traces:
     url = f"https://dpc3.compas.cs.stonybrook.edu/champsim-traces/speccpu/{trace}"
     trace_fp = f"traces/{trace}"
     download_with_subprocess(url, trace_fp)
-    for i in range(15):
+    for i in range(5):
         print(i)
         main(i, trace)
         try:
