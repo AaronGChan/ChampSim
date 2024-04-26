@@ -178,8 +178,8 @@ def decode(act_encoded):
 def select_config(trace):
     act_encoded = {}
     db = firestore.Client(project="nth-droplet-407821")
-
-    doc_ref = db.collection("champsim").document(trace)
+    trace_name_file = f"{trace}_long"
+    doc_ref = db.collection("champsim").document(trace_name_file)
     doc = doc_ref.get()
     if not doc.exists:
         doc_ref.set({"dummy": "1"})
@@ -188,7 +188,7 @@ def select_config(trace):
     while not found_good_value:
 
         def pull_doc():
-            data_store = db.collection("champsim").document(trace).get().to_dict()
+            data_store = db.collection("champsim").document(trace_name_file).get().to_dict()
             return data_store
 
         data_store = pull_doc()
@@ -279,7 +279,7 @@ def select_config(trace):
         data_store_1 = pull_doc()
         # breakpoint()
         if repr(list(act_encoded.values())) not in data_store_1.keys():
-            doc_ref = db.collection("champsim").document(trace)
+            doc_ref = db.collection("champsim").document(trace_name_file)
             data_store_1[repr(list(act_encoded.values()))] = "1"
             doc_ref.set(data_store_1)
             found_good_value = True
@@ -377,8 +377,8 @@ def run_program(iter, action_dict, trace):
         print(action_dict)
         sys.exit()
     print("Done configuring/making config")
-    output_json_dir = f"output_json_{trace}"
-    output_logs_dir = f"output_logs_{trace}"
+    output_json_dir = f"output_json_long_{trace}"
+    output_logs_dir = f"output_logs_long_{trace}"
     if not os.path.exists(output_json_dir):
         # Create the directory
         os.makedirs(output_json_dir)
@@ -390,9 +390,9 @@ def run_program(iter, action_dict, trace):
         [
             "./bin/champsim",
             "-w",
-            "200000000",
+            "0",
             "--simulation-instructions",
-            "500000000",
+            "700000000",
             trace_fp,
             "--json",
             f"{output_json_dir}/{name}.json",
@@ -472,9 +472,9 @@ def main(iter, trace):
 import random
 
 traces = [
-    #"400.perlbench-41B.champsimtrace.xz",
+    "400.perlbench-41B.champsimtrace.xz",
     #"400.perlbench-50B.champsimtrace.xz",
-    #"401.bzip2-226B.champsimtrace.xz",
+    "401.bzip2-226B.champsimtrace.xz",
     #"401.bzip2-277B.champsimtrace.xz",
     #"401.bzip2-38B.champsimtrace.xz",
     #"401.bzip2-7B.champsimtrace.xz",
@@ -540,31 +540,31 @@ traces = [
     # "459.GemsFDTD-765B.champsimtrace.xz",
     "462.libquantum-1343B.champsimtrace.xz",
     #"462.libquantum-714B.champsimtrace.xz",
-    #"464.h264ref-30B.champsimtrace.xz",
+    "464.h264ref-30B.champsimtrace.xz",
     # "464.h264ref-57B.champsimtrace.xz",
     # "464.h264ref-64B.champsimtrace.xz",
     # "464.h264ref-97B.champsimtrace.xz",
-    #"465.tonto-1914B.champsimtrace.xz",
+    "465.tonto-1914B.champsimtrace.xz",
     #"465.tonto-44B.champsimtrace.xz",
-    #"470.lbm-1274B.champsimtrace.xz",
-    #"471.omnetpp-188B.champsimtrace.xz",
-    #"473.astar-153B.champsimtrace.xz",
+    "470.lbm-1274B.champsimtrace.xz",
+    "471.omnetpp-188B.champsimtrace.xz",
+    "473.astar-153B.champsimtrace.xz",
     #"473.astar-359B.champsimtrace.xz",
     #"473.astar-42B.champsimtrace.xz",
-    #"481.wrf-1170B.champsimtrace.xz",
+    "481.wrf-1170B.champsimtrace.xz",
     # "481.wrf-1254B.champsimtrace.xz",
     # "481.wrf-1281B.champsimtrace.xz",
     # "481.wrf-196B.champsimtrace.xz",
     # "481.wrf-455B.champsimtrace.xz",
     # "481.wrf-816B.champsimtrace.xz",
-    #"482.sphinx3-1100B.champsimtrace.xz",
+    "482.sphinx3-1100B.champsimtrace.xz",
     # "482.sphinx3-1297B.champsimtrace.xz",
     # "482.sphinx3-1395B.champsimtrace.xz",
     # "482.sphinx3-1522B.champsimtrace.xz",
     # "482.sphinx3-234B.champsimtrace.xz",
     # "482.sphinx3-417B.champsimtrace.xz",
-    #"483.xalancbmk-127B.champsimtrace.xz",
-    #"483.xalancbmk-716B.champsimtrace.xz",
+    "483.xalancbmk-127B.champsimtrace.xz",
+    "483.xalancbmk-716B.champsimtrace.xz",
     #"483.xalancbmk-736B.champsimtrace.xz",
 ]
 random.shuffle(traces)
